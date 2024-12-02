@@ -1,0 +1,139 @@
+import com.google.common.base.Verify;
+import groovy.util.logging.Log;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.Select;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Random;
+
+//This testcase scenario creates a new random account and verifies if the item price is amended based on user's options.
+
+public class CreateUser {
+
+    WebDriver driver;
+    String url = "https://demowebshop.tricentis.com/";
+
+    @BeforeTest
+    public void BrowserSetup() {
+
+        System.out.println("Initiating the Test");
+
+        String pathChromeDriver = "d:\\chromedriver-win64/chromedriver.exe";
+        System.setProperty("webdriver.chrome.driver", pathChromeDriver);
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--remote-allow-origins=*");
+
+        driver = new ChromeDriver(options);
+        driver.manage().window().maximize();
+    }
+
+    @Test(priority = 1)
+    public void Register(){
+        driver.get(url);
+
+        int x = new Random().nextInt(99999);  // this will help in creating a different E-mail every time we run the code
+
+        String Expectedurl = "https://demowebshop.tricentis.com/";
+        String Actualurl = driver.getCurrentUrl();
+
+        Assert.assertEquals(Expectedurl,Actualurl); // Here we verify the URL of the page
+
+        WebElement registerbutton = driver.findElement(By.className("ico-register"));
+        registerbutton.click();
+
+        WebElement GenderSelect = driver.findElement(By.id("gender-male"));
+        GenderSelect.click();
+
+        WebElement FirstName = driver.findElement(By.id("FirstName"));
+        FirstName.sendKeys("John");
+
+        WebElement LastName = driver.findElement(By.id("LastName"));
+        LastName.sendKeys("Smith");
+
+        WebElement EmailField = driver.findElement(By.id("Email"));
+        EmailField.sendKeys("johnswith" + x + "@yahoo.com");
+
+        WebElement password = driver.findElement(By.id("Password"));
+        password.sendKeys("pass123");
+
+        WebElement ConfirmPass = driver.findElement(By.id("ConfirmPassword"));
+        ConfirmPass.sendKeys("pass123");
+
+        WebElement RegistrationButton = driver.findElement(By.id("register-button"));
+        RegistrationButton.click();
+
+        WebElement VerifyRegistration = driver.findElement(By.className("result"));
+
+        String ConfirmationTxt = "Your registration completed";
+        Assert.assertEquals(VerifyRegistration.getText(),ConfirmationTxt);  // Here we test the Registration Feature
+    }
+
+@Test(priority = 2)
+    public void TestPrice() {
+    WebElement ComputersMenu = driver.findElement(By.xpath(("//a[contains(@href,'/computers')]")));
+    Actions actions = new Actions(driver);
+    actions.moveToElement(ComputersMenu).perform(); // Here we just tested the hover functionality
+    ComputersMenu.click();
+
+    WebElement VerifyComputersCateg = driver.findElement(By.xpath("//img[@alt='Picture for category Desktops']"));
+    Assert.assertTrue(VerifyComputersCateg.isDisplayed()); // Verifying if we're on the page with the categories
+
+    VerifyComputersCateg.click();
+
+    WebElement VerifyDesktopPage = driver.findElement(By.xpath("//div[@class='filter-title']"));
+    Assert.assertTrue(VerifyDesktopPage.isDisplayed()); // Verifying if the intended Desktop Page was clicked
+
+
+    Select objSelect = new Select(driver.findElement(By.id("products-orderby")));
+    String DropDownOption = "https://demowebshop.tricentis.com/desktops?orderby=6";
+    objSelect.selectByValue(DropDownOption); // Verifying the Drop Down
+
+    String VerifyDropDownOptionURLActual = driver.getCurrentUrl();
+    String VerifyDropDownOptionURLExpected = "https://demowebshop.tricentis.com/desktops?orderby=6";
+
+    Assert.assertEquals(VerifyDropDownOptionURLActual,VerifyDropDownOptionURLExpected); // Verifying the URL
+
+    WebElement SimpleComputer = driver.findElement(By.xpath(("//a[contains(@href,'/simple-computer')]")));
+    SimpleComputer.click();
+    WebElement VerifySimpleComputer = driver.findElement(By.xpath("//img[@alt='Picture of Simple Computer']"));
+
+    Assert.assertTrue(VerifySimpleComputer.isDisplayed()); // Verifying if the Web Element is displayed
+
+    WebElement SimpleComputerHDD = driver.findElement(By.id("product_attribute_75_3_33_103"));
+    SimpleComputerHDD.click();
+
+    WebElement SimpleComputerPrice = driver.findElement(By.className("price_value_75"));
+
+    int ExpectedComputerPrice = 900;
+
+    Assert.assertEquals(SimpleComputerPrice,ExpectedComputerPrice); //Verifying if the price live change based on user's options
+
+}
+
+@Test(priority = 3)
+
+public void LogOut(){
+    WebElement LogOutButton = driver.findElement(By.className("ico-logout"));
+    LogOutButton.click();
+    WebElement LogInButton = driver.findElement(By.className("ico-login"));
+    Assert.assertTrue(LogInButton.isDisplayed()); // Verifying if the log out feature works
+}
+@AfterTest
+    public void CloseBrowser(){
+        System.out.println("The testcase was completed. Closing the browser..");
+        driver.close();
+}
+
+// The Testcase failed since the price doesn't live change.
+}
